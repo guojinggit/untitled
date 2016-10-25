@@ -34,20 +34,19 @@ def server_login(str_p):
                 sock_to_tomcat.send(str_array[3])  # 将消息发送到tomcat
                 # 一直接收来自tomcat的数据，直到tomcat发送完毕，关闭sock为止（防止数据接收不完整）
                 time1 = time.time()
-                last_length = 0
+                total_length = 0
+                data_all = b''
                 while True:
                     received_from_tomcat = sock_to_tomcat.recv(9000)
                     current_length = len(received_from_tomcat)
-                    print(current_length)
+                    total_length += current_length
+                    data_all += received_from_tomcat
                     if current_length == 0:
-                        break
-                    sock.send(bytes("to_client+{}+".format(key), "utf_8") + received_from_tomcat)
-                    if current_length < last_length:
                         break
                     if current_length < 9000:
                         break
-                    last_length = current_length
-                    print("已经回包")
+                sock.send(bytes("to_client+{}+{}+".format(key, total_length), "utf_8") + data_all)
+                print("已经回包,长度：", total_length)
                 time2 = time.time()
                 print("tomcat请求间隔：" + str(time2 - time1))
         # 防止一直重连消耗cpu
